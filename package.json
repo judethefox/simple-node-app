@@ -1,0 +1,44 @@
+{
+  "name": "booking-uploader",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "cors": "^2.8.4",
+    "express": "^4.16.3",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-dropzone": "^11.4.0",
+    "react-scripts": "4.0.3"
+  },
+  "scripts": {
+    "server": "node server/index.js",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom --verbose",
+    "eject": "react-scripts eject",
+    "fix-js": "prettier-eslint --write \"$(pwd)/src/**/*.{ts,tsx}\""
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.2",
+    "@types/react": "^17.0.22",
+    "@types/react-dom": "^17.0.9",
+    "@typescript-eslint/eslint-plugin": "^4.32.0",
+    "@typescript-eslint/parser": "^4.32.0",
+    "body-parser": "^1.19.0",
+    "prettier": "^2.4.1",
+    "prettier-eslint-cli": "^5.0.1",
+    "typescript": "^4.4.3"
+  }
+}
