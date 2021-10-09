@@ -3,20 +3,30 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@types/enzyme": "^3.10.9",
+    "@types/enzyme-adapter-react-16": "^1.0.6",
+    "@types/react-vis": "^1.11.7",
+    "bootstrap": "5.1.1",
     "cors": "^2.8.4",
+    "enzyme": "^3.11.0",
     "express": "^4.16.3",
+    "jsdom": "^18.0.0",
     "react": "^17.0.2",
+    "react-bootstrap": "^2.0.0-rc.0",
     "react-dom": "^17.0.2",
     "react-dropzone": "^11.4.0",
-    "react-scripts": "4.0.3"
+    "react-scripts": "4.0.3",
+    "react-vis": "^1.11.7",
+    "react-vis-types": "^0.0.6"
   },
   "scripts": {
     "server": "node server/index.js",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom --verbose",
+    "test-node": "jest --verbose ./server",
     "eject": "react-scripts eject",
-    "fix-js": "prettier-eslint --write \"$(pwd)/src/**/*.{ts,tsx}\""
+    "fix-js": "prettier-eslint --write \"$(pwd)/src/**/*.{ts,tsx}\"  \"$(pwd)/server/**/*.{js,ts,tsx}\""
   },
   "browserslist": {
     "production": [
@@ -37,6 +47,7 @@
     "@typescript-eslint/eslint-plugin": "^4.32.0",
     "@typescript-eslint/parser": "^4.32.0",
     "body-parser": "^1.19.0",
+    "enzyme-adapter-react-16": "^1.15.6",
     "prettier": "^2.4.1",
     "prettier-eslint-cli": "^5.0.1",
     "typescript": "^4.4.3"
