@@ -1,34 +1,42 @@
-const express = require('express')
-const cors = require('cors')
-const fs = require('fs')
-const bodyParser = require('body-parser')
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const request = require("request");
+const { getTableNumericData } = require("./utils");
+const { JSDOM } = require("jsdom");
 
-const app = express()
-app.use(cors()) // so that app can access
+const app = express();
 
-const existingBookings = JSON.parse(fs.readFileSync('./server/bookings.json')).map(
-  (bookingRecord) => {
-      const startTime = Date.parse(bookingRecord.time);
-      return {
-          startTime,
-          endTime: new Date(startTime + bookingRecord.duration*60000).getTime(),
-          userId: bookingRecord.user_id,
+app.use(cors());
+
+const jsonParser = bodyParser.json();
+
+app.post("/", jsonParser, (req, res) => {
+  const { wikiUrl } = req.body;
+
+  request.get(wikiUrl, function (error, response, body) {
+    const dom = new JSDOM(body);
+    const wikiTables = dom.window.document.body.querySelectorAll(".wikitable");
+
+    if (!wikiTables) {
+      res.json({ error: "Page must contain 'wikitable' class" });
+    }
+
+    try {
+      const data = getTableNumericData(wikiTables);
+
+      if (!data.length) {
+        res.json({
+          error:
+            "No suitable tables found. Table must contain some numeric columns.",
+        });
+      } else {
+        res.json({ data });
       }
-  },
-)
+    } catch (error) {
+      res.json({ error: "Server error. Please contact admin." });
+    }
+  });
+});
 
-app.get('/bookings', (_, res) => {
-  res.json(existingBookings)
-})
-
-const jsonParser = bodyParser.json()
-
-app.post('/bookings', jsonParser, (req, res) => {
-    const newBookings = req.body;
-
-    const nonConflictingNewBookings = newBookings.filter((newBooking) => !newBooking.conflict)
-
-    res.json([...existingBookings, ...nonConflictingNewBookings])
-})
-
-app.listen(3001)
+app.listen(3001);
