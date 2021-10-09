@@ -1,108 +1,48 @@
-import { getTimeline, isBookingInConflict } from "./utils";
-import { Booking } from "./types";
+import { getChartData, validateUrl } from "./utils";
 
-type isBookingInConflictDataProvider = {
-  newBookingStart: number;
-  newBookingEnd: number;
-  existingBookings: Booking[];
-  expectedInConflict: boolean;
-};
-
-type getTimelineDataProvider = {
-  bookings: Booking[];
-  expectedTimeline: string;
-};
-
-it("test getTimeline", () => {
-  const dataProvider: getTimelineDataProvider[] = [
-    {
-      bookings: [
-        {
-          startTime: Date.parse("01 Mar 2020 11:00:00 GMT+1000"),
-          endTime: Date.parse("01 Mar 2020 11:03:00 GMT+1000"),
-          userId: "0001",
-        },
-        {
-          startTime: Date.parse("01 Mar 2020 11:07:00 GMT+1000"),
-          endTime: Date.parse("01 Mar 2020 11:09:00 GMT+1000"),
-          userId: "0001",
-        },
-      ],
-      expectedTimeline: "▣▣▣□□□□▣▣",
-    },
-    {
-      bookings: [
-        {
-          startTime: Date.parse("01 Mar 2020 11:00:00 GMT+1000"),
-          endTime: Date.parse("01 Mar 2020 11:03:00 GMT+1000"),
-          userId: "0001",
-        },
-        {
-          startTime: Date.parse("01 Mar 2020 11:07:00 GMT+1000"),
-          endTime: Date.parse("01 Mar 2020 11:09:00 GMT+1000"),
-          userId: "0001",
-          conflict: true,
-        },
-      ],
-      expectedTimeline: "▣▣▣□□□□◩◩",
-    },
-  ];
-
-  dataProvider.forEach((test) => {
-    const { bookings, expectedTimeline } = test;
-    expect(getTimeline(bookings)).toStrictEqual(expectedTimeline);
+describe("test validateUrl", () => {
+  it("should returns false for non url strings", () => {
+    expect(validateUrl("sup")).toBe(false);
   });
-});
 
-it("test isBookingInConflict", () => {
-  const dataProvider: isBookingInConflictDataProvider[] = [
-    {
-      newBookingStart: Date.parse("01 Mar 2020 11:04:00 GMT+1000"),
-      newBookingEnd: Date.parse("01 Mar 2020 11:06:00 GMT+1000"),
-      existingBookings: [
-        {
-          startTime: Date.parse("01 Mar 2020 11:00:00 GMT+1000"),
-          endTime: Date.parse("01 Mar 2020 11:03:00 GMT+1000"),
-          userId: "0001",
-        },
-        {
-          startTime: Date.parse("01 Mar 2020 11:07:00 GMT+1000"),
-          endTime: Date.parse("01 Mar 2020 11:09:00 GMT+1000"),
-          userId: "0001",
-        },
-      ],
-      expectedInConflict: false,
-    },
-    {
-      newBookingStart: Date.parse("01 Mar 2020 11:02:00 GMT+1000"),
-      newBookingEnd: Date.parse("01 Mar 2020 11:07:00 GMT+1000"),
-      existingBookings: [
-        {
-          startTime: Date.parse("01 Mar 2020 11:00:00 GMT+1000"),
-          endTime: Date.parse("01 Mar 2020 11:03:00 GMT+1000"),
-          userId: "0001",
-        },
-        {
-          startTime: Date.parse("01 Mar 2020 11:07:00 GMT+1000"),
-          endTime: Date.parse("01 Mar 2020 11:09:00 GMT+1000"),
-          userId: "0001",
-        },
-      ],
-      expectedInConflict: true,
-    },
-  ];
+  it("should returns false for non-wikipedia urls", () => {
+    expect(validateUrl("https://www.google.com")).toBe(false);
+  });
 
-  dataProvider.forEach((test) => {
-    const {
-      newBookingStart,
-      newBookingEnd,
-      existingBookings,
-      expectedInConflict,
-    } = test;
+  it("should returns true for wikipedia urls", () => {
     expect(
-      isBookingInConflict(newBookingStart, newBookingEnd, existingBookings)
-    ).toStrictEqual(expectedInConflict);
+      validateUrl(
+        "https://en.wikipedia.org/wiki/2020%E2%80%9321_Sevilla_FC_season"
+      )
+    ).toBe(true);
   });
 });
 
-export {};
+describe("test getChartData", () => {
+  const dataProvider = [
+    {
+      data: [
+        { 0: "2021", 2: "8 medals" },
+        { 0: "2022", 2: "5 medals" },
+      ],
+      chartData: [
+        { x: "8 medals", y: 2021 },
+        { x: "5 medals", y: 2022 },
+      ],
+    },
+    {
+      data: [
+        { 3: "2021 game", 2: "8 medals" },
+        { 3: "2022 game", 2: "5 medals" },
+      ],
+      chartData: [
+        { x: "2021 game", y: 8 },
+        { x: "2022 game", y: 5 },
+      ],
+    },
+  ];
+
+  dataProvider.forEach(({ data, chartData }) => {
+    expect(getChartData(data)).toMatchObject(chartData);
+  });
+});
