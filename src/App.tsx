@@ -1,120 +1,98 @@
-import React, { useState, ChangeEvent } from "react";
-import { Button, Col, Container, Form, Row } from "react-bootstrap";
-import ChartContainer from "./ChartContainer";
-import { validateUrl } from "./utils";
-import { NumericTableData } from "./types";
-import SingleColumnTableDataContainer from "./SingleColumnTableDataContainer";
-
-const apiUrl = "http://localhost:3001";
+import React, { useState } from "react";
+import { Alert, Col, Container, Form, Row } from "react-bootstrap";
+import AddPropertyModal from "./AddPropertyModal";
+import { apiUrl, PropertyResult } from "./types";
+import PropertyList from "./PropertyList";
 
 export const App = () => {
-  const [wikiUrl, setWikiUrl] = useState<string>(
-    "https://en.wikipedia.org/wiki/Women%27s_high_jump_world_record_progression"
-  );
-  const [isLoading, setIsLoading] = useState(false);
-  const [validUrl, setValidUrl] = useState(true);
-  const [error, setError] = useState<string>();
-  const [data, setData] = useState<NumericTableData[]>();
+  const [isAddNewModalOpen, setAddNewModalOpen] = useState(false);
+  const [searchResult, setSearchResult] = useState<PropertyResult[]>();
+  const [searchError, setSearchError] = useState<string>();
+  const [searchSuburb, setSearchSuburb] = useState<string>("");
 
-  const handleUrlChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const url = e.target.value;
-    setWikiUrl(url);
+  const handleClickAdd = () => {
+    setAddNewModalOpen(true);
   };
 
-  const handleSubmit = () => {
-    setError(undefined);
-    setData(undefined);
-
-    if (!validateUrl(wikiUrl)) {
-      setValidUrl(false);
-      return false;
-    }
-    setIsLoading(true);
-    setValidUrl(true);
-
-    const requestOptions = {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ wikiUrl }),
-    };
-
-    fetch(apiUrl, requestOptions)
-      .then((response) => response.json())
-      .then((response) => {
-        if (response.error) {
-          setError(response.error);
-        } else {
-          setData(response.data);
-        }
-        setIsLoading(false);
-      });
+  const handleModalClose = () => {
+    setAddNewModalOpen(false);
   };
 
-  const showChart = data && Object.keys(data[0]).length === 2;
+  const handleClickSearch = () => {
+    setSearchError(undefined);
+
+    const fetchUrl = new URL(`${apiUrl}/properties`);
+    const searchParams = { suburb: searchSuburb.trim() };
+    fetchUrl.search = new URLSearchParams(searchParams).toString();
+
+    fetch(fetchUrl.toString()).then((response) => {
+      if (!response.ok)
+        response.text().then((text) => {
+          setSearchResult(undefined);
+          setSearchError(text);
+        });
+      else {
+        response.json().then((json) => {
+          setSearchResult(json.data);
+        });
+      }
+    });
+  };
 
   return (
     <>
-      <Container className="w-25 mt-5">
-        <Row>
-          <Col className="col-12">
-            <h5>Bar Charts</h5>
-            <ul>
-              <li>
-                https://en.wikipedia.org/wiki/Women%27s_high_jump_world_record_progression
-              </li>
-              <li>https://en.wikipedia.org/wiki/Academy_Awards</li>
-            </ul>
-            <h5>Value list when only one numeric column found</h5>
-            <ul>
-              <li>
-                https://en.wikipedia.org/wiki/Make_Me_(Britney_Spears_song)
-              </li>
-            </ul>
-          </Col>
-        </Row>
-        <Row>
-          <Col className="col-11">
-            <Form.Control
-              type="text"
-              placeholder="Enter a Wikipedia URL"
-              value={wikiUrl}
-              onChange={handleUrlChange}
-            />
-            {!validUrl && (
-              <span className={"text-danger"}>
-                Please enter a fully qualified Wikipedia URL
-              </span>
-            )}
-          </Col>
-          <Col className="col-1">
-            <Button
-              variant="primary"
-              type="submit"
-              onClick={handleSubmit}
-              disabled={isLoading}
+      <Container className="w-50 mt-5">
+        <Row className="mb-12">
+          <Col className="col-2 text-end">
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleClickAdd}
             >
-              Submit
-            </Button>
+              Add
+            </button>
+          </Col>
+          <Col className="col-8 text-start">
+            <Container>
+              <Row>
+                <Col className="col-6 text-end">
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleClickSearch}
+                  >
+                    Search
+                  </button>
+                </Col>
+                <Col className="col-6">
+                  <Form.Control
+                    type="text"
+                    placeholder="Suburb"
+                    value={searchSuburb}
+                    onChange={(e) => {
+                      setSearchSuburb(e.target.value);
+                    }}
+                  />
+                </Col>
+              </Row>
+            </Container>
           </Col>
         </Row>
-        <Row>
-          <Col className="col-12">
-            {isLoading && <span>Scanning the url for suitable tables...</span>}
-            {error && <span className={"text-danger"}>{error}</span>}
-          </Col>
-        </Row>
+        {searchError && (
+          <Row className="mt-4">
+            <Col className="col-12">
+              <Alert variant="danger">{searchError}</Alert>
+            </Col>
+          </Row>
+        )}
       </Container>
-      {data && (
-        <div className="pt-5">
-          {
-            // if 2 numeric columns found, show the bar chart. Otherwise show a table of result only. (It's difficult to show a chart for 1-dimensional data)
-            showChart ? (
-              <ChartContainer data={data} />
-            ) : (
-              <SingleColumnTableDataContainer data={data} />
-            )
-          }
+      {searchResult && (
+        <div className="m-auto mt-4" style={{ maxWidth: "50em" }}>
+          <PropertyList properties={searchResult} />
         </div>
+      )}
+      {isAddNewModalOpen && (
+        <AddPropertyModal handleModalClose={handleModalClose} />
       )}
     </>
   );

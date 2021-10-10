@@ -3,7 +3,7 @@ import { App } from "./App";
 import Adapter from "enzyme-adapter-react-16";
 configure({ adapter: new Adapter() });
 
-describe("Test <App> component", () => {
+describe("<App> test", () => {
   const setUp = () => {
     return shallow(<App />);
   };
@@ -11,7 +11,8 @@ describe("Test <App> component", () => {
   test("renders correctly", () => {
     const wrapper = setUp();
 
-    expect(wrapper.text()).toContain("Bar Charts");
-    expect(wrapper.find("Button").exists()).toBe(true);
+    const addButton = wrapper.find("button").at(0);
+    addButton.simulate("click");
+    expect(wrapper.find("AddPropertyModal").exists()).toBe(true);
   });
 });
