@@ -1,45 +1,56 @@
 ### The Task
-#### The task:
+#### Requirements:
+* Design & Build an API for adding and searching properties for sale:
+* Endpoint to add property with address, sale price, and description.
+  * Endpoint to search properties using an optional suburb filter.
+  Search results must include the property address, sale price **and some kind
+  of field to indicate if the property is above, below or equal to the avg price
+  for properties in the suburb**.
 
-* Write a program to display charts from data found in Wikipedia tables
-* The program should accept a URL and then display the chart of that data
-* The front end should be in a browser (framework or not, your choice)
-* The backend should be in Node JS (or any other language of your choice)
-* The input is any Wikipedia URL, e.g.,https://en.wikipedia.org/wiki/Women%27s_high_jump_world_record_progression
-* The back end should access the URL, scan the page for a table with numbers
-* find one or more numeric columns
-* return the data back to the front end for display
-* The front end should turn the data into a chart and show it to the user
+Currently, there is no requirement to use a database (i.e. in memory storage is fine).
+However, if we had millions of properties, describe any further considerations (if any) that
+would you make to the design.
 
-#### Additional notes (IMPORTANT):
+#### Notes:
+* Whilst you can implement the solution in any language, the preference is nodejs
+(you can use express or equivalent as a local web server).
+* Please ensure you structure your code and include an appropriate level of testing as
+though you’re writing for production.
+* Please note down any assumptions you make.
 
-* Keep your solutions simple. No need to spend more than a couple of hours on it
-* Make any assumptions you feel necessary to deliver value and document them
-* We are interested in your holistic approach to development, not just the code
-* Please add one wow features of your choice to impress your users
-
+***
 ### To test the app
-
 * To install dependencies: `yarn install`
 * To run ExpressJS server: `yarn run server`
 * To run ReactJS app: `yarn start`
 
-### Clarification
-* Numeric column = Cell data can be `parseFloat` ed
-* If multiple suitable tables are found on the page, the app will use the first one.
-* The app shows a list of data if there's only one numeric column found
-* It will show a bar chart if 2 numeric columns are found
-* Currently, only support 1 or 2 numeric columns. More numeric columns will be ignored
-* The app is not smart enough to figure out which data is more suitable to be the X and Y axis. e.g. '8 Medals' is obviously more appropriate to be the Y axis compared to '2021', however the app won't know.
-* Minimum test coverage was added for the purpose of demonstrating the idea only
+### Assumptions / Clarification
+* The search and suburb average price calculation is based on the assumption that suburb names are unique across the country.
+* There cannot be more than one property at the same street address. (Used when detecting duplicate addresses)
+* Data submitted from the client are always safe. No server side validation is added.
+* When search for properties, the loading is always lighting fast, therefore no loading spinner is added.
+* Unit tests do not cover all scenarios and all components - They are added for the purpose of demonstrating the idea only.
 
-### Tasks planned / carried out
-* Form input and post data handling
-* URL validation
-* Parse dumped html and identify suitable tables
-* Server side error handling, e.g. no suitable tables found
-* Convert table numeric column data into an array of json and send it back to the frontend
-* Handle different situation: 1-dimensional data and 2-dimensional data
-* Convert the data into the format can be used by React Vis
-* Unit test for util function for both frontend and backend
-* Test frontend component rendering
+### What if we have millions of properties?
+* Obviously we'll store the properties in databases, can also use some caching mechanism to help with the querying speed.
+* Add Google address autocomplete to reduce error when adding properties, with optional manual address form in case the address does not exist yet.
+* Add pagination to search results.
+* Store the suburb average price data in the database, and run a scheduled tasks, potentially overnight, to update the data, so we can avoid re-calculating it everytime when user search for properties.
+
+### Tasks planned - Frontend
+* Add property components (Add button, modal, fields)
+* Form input data validation and post data handling
+* Add property server error handling
+* Search property components (Search button, optional suburb input)
+* Search property server error handling
+* Property list rendering
+* Frontend component and util methods unit test
+
+### Tasks planned - Backend
+* New property post data handling
+* Check if property exists by comparing the address, suburb and state
+* Search property handling
+* Suburb property average price calculation
+* Add price point to property data returned
+* Error handling
+* Add unit tests for the util methods
