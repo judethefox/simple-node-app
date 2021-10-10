@@ -1,0 +1,30 @@
+[
+  {
+    "address": "360 Elizabeth St",
+    "suburb": "Melbourne",
+    "state": "VIC",
+    "price": 1000000,
+    "description": "Melbourne Central Tower"
+  },
+  {
+    "address": "108 Market St",
+    "suburb": "Sydney",
+    "state": "NSW",
+    "price": 1500000,
+    "description": "Sydney Tower Eye"
+  },
+  {
+    "address": "120 Commonwealth Ave",
+    "suburb": "Canberra",
+    "state": "ACT",
+    "price": 2000000,
+    "description": "Hyatt Hotel Canberra"
+  },
+  {
+    "address": "90-130 Swanston St",
+    "suburb": "Melbourne",
+    "state": "VIC",
+    "price": 2000000,
+    "description": "Melbourne Town Hall"
+  }
+]

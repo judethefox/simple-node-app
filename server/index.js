@@ -1,9 +1,13 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const request = require("request");
-const { getTableNumericData } = require("./utils");
-const { JSDOM } = require("jsdom");
+const {
+  checkIfPropertyExists,
+  addNewProperty,
+  getExistingProperties,
+  getSuburbAverage,
+  addPricePointToProperties,
+} = require("./utils");
 
 const app = express();
 
@@ -11,32 +15,61 @@ app.use(cors());
 
 const jsonParser = bodyParser.json();
 
-app.post("/", jsonParser, (req, res) => {
-  const { wikiUrl } = req.body;
+app.post("/property", jsonParser, (req, res) => {
+  try {
+    const { address, suburb, state, price, description } = req.body;
 
-  request.get(wikiUrl, function (error, response, body) {
-    const dom = new JSDOM(body);
-    const wikiTables = dom.window.document.body.querySelectorAll(".wikitable");
+    const existingProperties = getExistingProperties();
 
-    if (!wikiTables) {
-      res.json({ error: "Page must contain 'wikitable' class" });
+    if (checkIfPropertyExists(existingProperties, address, suburb, state)) {
+      res.status(400);
+      res.send("Property already exists");
+    } else {
+      addNewProperty(
+        existingProperties,
+        address,
+        suburb,
+        state,
+        price,
+        description
+      );
+      res.json({ success: true });
     }
+  } catch (error) {
+    res.status(500);
+    res.send("Failed to add new property");
+  }
+});
 
-    try {
-      const data = getTableNumericData(wikiTables);
+app.get("/properties", (req, res) => {
+  try {
+    const { suburb } = req.query;
+    const existingProperties = getExistingProperties();
 
-      if (!data.length) {
-        res.json({
-          error:
-            "No suitable tables found. Table must contain some numeric columns.",
-        });
-      } else {
-        res.json({ data });
-      }
-    } catch (error) {
-      res.json({ error: "Server error. Please contact admin." });
+    const filteredProperties = suburb
+      ? existingProperties.filter(
+          ({ suburb: currentSuburb }) =>
+            suburb.toLowerCase() === currentSuburb.toLowerCase()
+        )
+      : existingProperties;
+
+    const suburbAverage = getSuburbAverage(filteredProperties);
+
+    const decoratedProperties = addPricePointToProperties(
+      filteredProperties,
+      suburbAverage
+    );
+
+    if (decoratedProperties.length) {
+      res.json({ data: decoratedProperties });
+    } else {
+      res.status(400);
+      res.send("No property found");
     }
-  });
+  } catch (error) {
+    res.status(500);
+    res.send("Failed to retrieve properties");
+  }
 });
 
 app.listen(3001);

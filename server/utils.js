@@ -1,57 +1,80 @@
-const getNumericColIndexes = (tds) =>
-  tds.reduce((res, td, colIndex) => {
-    // Only support max 2 columns of data
-    if (res.length === 2) return res;
+const fs = require("fs");
 
-    if (!parseFloat(td.textContent)) {
-      return res;
-    }
-    return [...res, colIndex];
-  }, []);
-
-// Get an array of data for each table row provided
-const getTableNumericColumnData = (trs, numericColIndexes) =>
-  trs.map((tr) => {
-    const tds = tr.querySelectorAll("td");
-
-    return Array.from(tds).reduce((tableNumericData, td, columnIndex) => {
-      if (numericColIndexes.includes(columnIndex)) {
-        const textNodeValue = td.textContent;
-
-        // remove line breaks
-        const trimmedText = textNodeValue.replace(/(\r\n|\n|\r)/gm, "");
-
-        return { ...tableNumericData, [columnIndex]: trimmedText };
-      }
-
-      // skip non-numeric columns
-      return tableNumericData;
-    }, {});
+exports.addNewProperty = (
+  properties,
+  newAddress,
+  newSuburb,
+  newState,
+  newPrice,
+  newDescription
+) => {
+  properties.push({
+    address: newAddress,
+    suburb: newSuburb,
+    state: newState,
+    price: newPrice,
+    description: newDescription,
   });
+  fs.writeFileSync(
+    "./server/properties.json",
+    JSON.stringify(properties, null, 2)
+  );
+};
 
-exports.getTableNumericData = (wikiTables) => {
-  return Array.from(wikiTables).reduce((result, wikiTable) => {
-    // stop executing the reducer if we have valid data from one of the tables. I understand it's not ideal to loop through the rest of the data but if we use forEach we'll face some other issues
-    if (result.length) {
-      return result;
+exports.checkIfPropertyExists = (
+  existingProperties,
+  newAddress,
+  newSuburb,
+  newState
+) =>
+  !!existingProperties.find(
+    ({ address, suburb, state }) =>
+      address.toLowerCase() === newAddress.toLowerCase() &&
+      suburb.toLowerCase() === newSuburb.toLowerCase() &&
+      state.toLowerCase() === newState.toLowerCase()
+  );
+
+exports.getSuburbAverage = (properties) => {
+  const suburbData = properties.reduce((result, { suburb, price }) => {
+    if (!result.hasOwnProperty(suburb)) {
+      result[suburb] = {
+        totalPrice: parseFloat(price),
+        totalNumber: 1,
+      };
+    } else {
+      result[suburb].totalPrice += parseFloat(price);
+      result[suburb].totalNumber += 1;
     }
 
-    const trs = Array.from(wikiTable.querySelectorAll("tbody tr"));
-    // do not continue if the table is empty
-    if (trs.length <= 1) return [];
+    return result;
+  }, {});
 
-    // for some reason the first row is always empty
-    trs.shift();
+  const suburbAverage = {};
+  for (const [suburb, { totalPrice, totalNumber }] of Object.entries(
+    suburbData
+  )) {
+    suburbAverage[suburb] = totalPrice / totalNumber;
+  }
 
-    const firstRowTds = Array.from(trs[0].querySelectorAll("td"));
-
-    // determine which column contains numeric values. It's only examining the first row so obviously there's a limitation to it.
-    const numericColIndexes = getNumericColIndexes(firstRowTds);
-
-    // do not continue if no numeric column is found
-    if (!numericColIndexes.length) return [];
-
-    // iterate through each table row, and select data from the numeric column cells
-    return getTableNumericColumnData(trs, numericColIndexes);
-  }, []);
+  return suburbAverage;
 };
+
+exports.getExistingProperties = () => {
+  const propertyJson = fs.readFileSync("./server/properties.json");
+  return JSON.parse(propertyJson);
+};
+
+exports.addPricePointToProperties = (properties, suburbAverage) =>
+  properties.map((property) => {
+    const { suburb, price } = property;
+    const averagePrice = suburbAverage[suburb];
+
+    const pricePoint =
+      parseFloat(price) > averagePrice
+        ? "AboveAverage"
+        : parseFloat(price) === averagePrice
+        ? "Average"
+        : "BelowAverage";
+
+    return { ...property, ...{ pricePoint } };
+  });
